@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Océano Limpio: el agua de Santa Marta</title>
+<meta name="description" content="Océano Limpio es un proyecto de estudiantes de la Universidad del Magdalena para que la comunidad entienda cómo la contaminación del agua afecta los ecosistemas, la pesca y la economía de Santa Marta, y qué podemos hacer.">
+<meta name="theme-color" content="#0E5E86">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+  /* ===== Paleta: de la espuma de la orilla al fondo de la bahía ===== */
+  :root {
+    --espuma: #F3FBFA;
+    --turquesa: #1FA3A6;
+    --bahia: #0E5E86;
+    --abismo: #051F33;
+    --sol: #F6C445;      /* el sol samario, también el amarillo del juego */
+    --tinta: #0A2A40;
+    --display: 'Bricolage Grotesque', system-ui, sans-serif;
+    --texto: 'Source Serif 4', Georgia, serif;
+    --medida: 64ch;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition: none !important; } }
+  body { font-family: var(--texto); font-size: 1.125rem; line-height: 1.7; color: var(--tinta); background: var(--abismo); }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--sol); outline-offset: 3px; border-radius: 4px; }
+  h1, h2, h3, h4 { font-family: var(--display); line-height: 1.1; letter-spacing: -.01em; }
+  h2 { font-size: clamp(2rem, 4.6vw, 3.5rem); font-weight: 800; margin-bottom: 1.2rem; max-width: 17ch; }
+  h3 { font-size: clamp(1.3rem, 2.3vw, 1.7rem); font-weight: 700; margin: 2.6rem 0 .8rem; }
+  p + p { margin-top: 1em; }
+  .prosa { max-width: var(--medida); }
+  .entrada { font-size: clamp(1.15rem, 1.8vw, 1.35rem); line-height: 1.6; max-width: 58ch; text-wrap: pretty; }
+
+  /* ===== Cada sección es una franja más honda; el agua se oscurece al bajar ===== */
+  .capa { position: relative; padding: clamp(4.5rem, 9vw, 8rem) clamp(1.25rem, 6vw, 6rem); padding-right: clamp(1.25rem, 10vw, 9rem); }
+  .capa > .dentro { max-width: 1100px; margin: 0 auto; }
+  #problema   { background: linear-gradient(#F3FBFA, #D8EFEE); }
+  #impacto    { background: linear-gradient(#D8EFEE, #A9D9DA); }
+  #afectados  { background: linear-gradient(#A9D9DA, #6DBCC5); }
+  #solucion   { background: linear-gradient(#6DBCC5, #1F7F98); color: var(--espuma); }
+  #tu-parte   { background: linear-gradient(#1F7F98, #0F5F86); color: var(--espuma); }
+  #propuestas { background: linear-gradient(#0F5F86, #0B4468); color: var(--espuma); }
+  #preguntas  { background: linear-gradient(#0B4468, #08334F); color: var(--espuma); }
+  #juego      { background: linear-gradient(#08334F, #062841); color: var(--espuma); }
+  #nosotros   { background: linear-gradient(#062841, #051F33); color: #CFE6EE; }
+
+  /* ===== Regla de profundidad (navegación) ===== */
+  .regla { position: fixed; right: clamp(.6rem, 1.6vw, 1.6rem); top: 50%; transform: translateY(-50%); z-index: 20;
+           display: flex; flex-direction: column; gap: .15rem; font-family: var(--display);
+           background: rgba(5,31,51,.55); backdrop-filter: blur(4px); padding: .6rem .7rem; border-radius: 14px; }
+  .regla a { position: relative; display: flex; align-items: center; justify-content: flex-end; gap: .55rem; text-decoration: none; padding: .2rem 0; }
+  .regla .nombre { position: absolute; right: calc(100% + 1.1rem); font-size: .82rem; pointer-events: none; font-weight: 600; opacity: 0; transform: translateX(6px); transition: opacity .2s, transform .2s;
+                   background: rgba(5,31,51,.9); color: var(--espuma); padding: .15rem .55rem; border-radius: 6px; white-space: nowrap; }
+  .regla .m { font-size: .72rem; font-variant-numeric: tabular-nums; color: rgba(255,255,255,.8); width: 2.6rem; text-align: right; }
+  .regla .marca { width: 18px; height: 3px; background: rgba(255,255,255,.55); border-radius: 2px; transition: width .25s, background .25s; }
+  .regla a:hover .nombre, .regla a:focus-visible .nombre, .regla a.actual .nombre { opacity: 1; transform: none; }
+  .regla a.actual .marca { width: 34px; background: var(--sol); }
+  .regla a.actual .m { color: var(--sol); }
+  @media (max-width: 860px) { .regla { display: none; } .capa { padding-right: clamp(1.25rem, 6vw, 6rem); } }
+
+  /* ===== Portada: la bahía vista desde la orilla ===== */
+  .portada { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr auto auto; overflow: hidden;
+             background: linear-gradient(#BFE6F0 0%, #E7F6F7 46%, #F3FBFA 100%); color: var(--tinta); }
+  .portada .paisaje { display: block; width: 100%; height: clamp(230px, 30vw, 420px); }
+  .portada .flota { animation: flotar 4.5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  .portada .barco { animation: mecer 7s ease-in-out infinite; transform-box: fill-box; transform-origin: center bottom; }
+  @keyframes flotar { 50% { translate: 0 3px; rotate: 4deg; } }
+  .portada .faro-luz { animation: destello 3.2s ease-in-out infinite; }
+  @keyframes destello { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+  @keyframes mecer { 50% { translate: 0 2px; rotate: -.6deg; } }
+  .portada .titular { position: relative; z-index: 2; align-self: center; padding: clamp(3rem, 7vh, 4.5rem) clamp(1.25rem, 6vw, 6rem) 1.5rem; max-width: 1180px; width: 100%; margin: 0 auto; }
+  .marca-proyecto { display: inline-flex; align-items: center; gap: .6rem; font-family: var(--display); font-weight: 800; font-size: 1.2rem; color: var(--bahia); margin-bottom: 1.3rem; }
+  .marca-proyecto svg { width: 36px; height: 36px; }
+  .portada h1 { font-size: clamp(2.4rem, 5.4vw, 4.6rem); font-weight: 800; line-height: .98; letter-spacing: -.03em; max-width: 15ch; color: var(--tinta); }
+  .portada h1 .linea { display: block; }
+  .portada h1 .linea:first-child { color: var(--bahia); }
+  .portada .bajada { margin-top: 1.5rem; max-width: 56ch; font-size: clamp(1.05rem, 1.6vw, 1.22rem); line-height: 1.55; }
+  .acciones { display: flex; flex-wrap: wrap; gap: .9rem; margin-top: 2rem; }
+  .boton { font-family: var(--display); font-weight: 700; font-size: 1.08rem; text-decoration: none; display: inline-flex; align-items: center; gap: .6rem;
+           padding: .85rem 1.5rem; border-radius: 999px; border: 2px solid var(--bahia); color: var(--bahia); background: rgba(243,251,250,.6); transition: background .15s, color .15s; }
+  .boton:hover { background: var(--bahia); color: var(--espuma); }
+  .boton.sol { background: var(--sol); border-color: var(--sol); color: var(--abismo); box-shadow: 0 6px 0 #B98A10; }
+  .boton.sol:hover { background: #FFD45E; }
+  .boton.sol:active { transform: translateY(3px); box-shadow: 0 3px 0 #B98A10; }
+  .portada .pie-portada { background: #0E5E86; color: var(--espuma); font-family: var(--display); font-size: .98rem;
+           padding: 0 max(clamp(1.25rem, 6vw, 6rem), calc((100% - 1180px) / 2 + clamp(1.25rem, 6vw, 6rem))) 1.6rem; padding-top: 1rem; }
+  .ola-frente { animation: subir 1.6s cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes subir { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @media (max-width: 700px) {
+    .portada { min-height: auto; }
+    .portada .titular { padding-top: 3rem; padding-bottom: 1rem; }
+    .portada .paisaje { margin-top: 0; }
+  }
+
+  /* ===== El problema ===== */
+  .llega { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem 2.6rem; margin-top: 3rem; }
+  .llega svg { width: 64px; height: 64px; margin-bottom: .9rem; }
+  .llega h3 { margin: 0 0 .5rem; font-size: 1.35rem; color: var(--bahia); }
+  .llega p { font-size: 1.02rem; line-height: 1.6; }
+  @media (max-width: 820px) { .llega { grid-template-columns: 1fr; } }
+  .dato-fuente { display: block; margin-top: .5rem; font-family: var(--display); font-size: .82rem; opacity: .7; }
+  .frase { margin-top: 3.4rem; font-family: var(--display); font-weight: 600; font-size: clamp(1.4rem, 3vw, 2.2rem); line-height: 1.25; max-width: 30ch; color: var(--bahia); }
+
+  /* ===== El impacto: la cadena interactiva ===== */
+  .cadena { margin: 2.6rem 0 1rem; }
+  .eslabones { list-style: none; display: grid; grid-template-columns: repeat(5, 1fr); position: relative; }
+  .eslabones::before { content: ''; position: absolute; left: 10%; right: 10%; top: 34px; height: 4px; background: repeating-linear-gradient(90deg, var(--bahia) 0 14px, transparent 14px 22px); }
+  .eslabon button { all: unset; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: .7rem; text-align: center; width: 100%; font-family: var(--display); font-weight: 600; font-size: 1rem; line-height: 1.2; padding: 0 .3rem; }
+  .eslabon .nodo { position: relative; width: 72px; height: 72px; border-radius: 50%; background: var(--bahia); border: 3px solid var(--espuma); display: grid; place-items: center; transition: background .2s, transform .2s; }
+  .eslabon .nodo svg { width: 38px; height: 38px; stroke: var(--espuma); }
+  .eslabon button:hover .nodo { transform: scale(1.06); }
+  .eslabon button[aria-selected="true"] .nodo { background: var(--sol); }
+  .eslabon button[aria-selected="true"] .nodo svg { stroke: var(--abismo); }
+  .eslabon button:focus-visible { outline: none; }
+  .eslabon button:focus-visible .nodo { outline: 3px solid var(--bahia); outline-offset: 4px; }
+  .panel { margin-top: 2rem; background: rgba(243,251,250,.72); border-left: 4px solid var(--bahia); border-radius: 0 16px 16px 0; padding: 1.4rem 1.6rem; max-width: 820px; min-height: 9rem; }
+  .panel h4 { font-size: 1.35rem; margin-bottom: .5rem; color: var(--bahia); }
+  .panel p { font-size: 1.04rem; }
+  .ayuda { font-family: var(--display); font-size: .95rem; opacity: .75; margin-top: .5rem; }
+  @media (max-width: 700px) {
+    .eslabones { grid-template-columns: 1fr; gap: .9rem; }
+    .eslabones::before { left: 34px; right: auto; top: 0; bottom: 0; width: 4px; height: auto; background: repeating-linear-gradient(180deg, var(--bahia) 0 14px, transparent 14px 22px); }
+    .eslabon button { flex-direction: row; text-align: left; gap: 1rem; }
+    .eslabon .nodo { flex: none; width: 60px; height: 60px; margin-left: 6px; }
+  }
+  .ejemplo { margin-top: 2.6rem; display: grid; grid-template-columns: auto 1fr; gap: 1.2rem; align-items: start; max-width: 760px; }
+  .ejemplo svg { width: 56px; height: 56px; }
+  .ejemplo h4 { font-size: 1.2rem; margin-bottom: .3rem; }
+  .ejemplo p { font-size: 1.02rem; }
+
+  /* ===== A quién afecta ===== */
+  .personas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; margin-top: 2.6rem; }
+  .persona { background: rgba(243,251,250,.6); border-radius: 22px; padding: 1.4rem 1.3rem 1.6rem; }
+  .persona svg { width: 52px; height: 52px; margin-bottom: .7rem; }
+  .persona h3 { margin: 0 0 .5rem; font-size: 1.2rem; }
+  .persona p { font-size: 1rem; line-height: 1.55; }
+  @media (max-width: 960px) { .personas { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .personas { grid-template-columns: 1fr; } }
+
+  /* ===== Nuestra solución: los cuatro pasos del proyecto ===== */
+  .ruta { list-style: none; counter-reset: paso; display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; margin-top: 3rem; }
+  .ruta li { counter-increment: paso; position: relative; padding-top: 4.4rem; }
+  .ruta li::before { content: counter(paso); position: absolute; top: 0; left: 0; width: 3.2rem; height: 3.2rem; border-radius: 50%; background: var(--sol); color: var(--abismo);
+                     font-family: var(--display); font-weight: 800; font-size: 1.5rem; display: grid; place-items: center; }
+  .ruta li:not(:last-child)::after { content: ''; position: absolute; top: 1.55rem; left: 3.8rem; right: -1.6rem; height: 3px; background: rgba(246,196,69,.55); }
+  .ruta h3 { margin: 0 0 .5rem; font-size: 1.4rem; }
+  .ruta p { font-size: 1.02rem; line-height: 1.6; }
+  .ruta a { color: var(--sol); font-family: var(--display); font-weight: 600; }
+  @media (max-width: 900px) { .ruta { grid-template-columns: 1fr 1fr; } .ruta li::after { display: none; } }
+  @media (max-width: 560px) { .ruta { grid-template-columns: 1fr; } }
+
+  /* ===== Lo que puedes hacer ===== */
+  .acciones-lista { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6rem 2.4rem; margin-top: 2.8rem; }
+  .acciones-lista li { display: grid; grid-template-columns: 48px 1fr; gap: 1rem; align-items: start; }
+  .acciones-lista svg { width: 48px; height: 48px; }
+  .acciones-lista h3 { margin: .2rem 0 .4rem; font-size: 1.18rem; }
+  .acciones-lista p { font-size: 1rem; line-height: 1.55; }
+  @media (max-width: 900px) { .acciones-lista { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .acciones-lista { grid-template-columns: 1fr; } }
+
+  /* ===== Propuestas ===== */
+  .propuestas { display: grid; grid-template-columns: 1fr 1fr; gap: 2.4rem 4rem; margin-top: 2.6rem; }
+  .propuestas h3 { margin: 0 0 1rem; color: var(--sol); }
+  .propuestas ul { list-style: none; display: grid; gap: 1rem; }
+  .propuestas li { padding-left: 1.6rem; position: relative; font-size: 1.04rem; line-height: 1.55; }
+  .propuestas li::before { content: ''; position: absolute; left: 0; top: .6em; width: .7rem; height: .7rem; border-radius: 50%; border: 2px solid var(--sol); }
+  @media (max-width: 800px) { .propuestas { grid-template-columns: 1fr; } }
+  .aviso { margin-top: 2.8rem; max-width: var(--medida); padding: 1rem 1.2rem; border: 1.5px solid rgba(246,196,69,.6); border-radius: 12px; font-size: 1rem; }
+  .aviso strong { font-family: var(--display); color: var(--sol); }
+
+  /* ===== Juego ===== */
+  .antes-juego { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem 3rem; padding-bottom: 3rem; margin-bottom: 3.5rem; border-bottom: 1px solid rgba(243,251,250,.2); }
+  .antes-juego > div { display: grid; grid-template-columns: 48px 1fr; grid-template-rows: auto 1fr; column-gap: 1rem; align-items: start; }
+  .antes-juego svg { width: 48px; height: 48px; grid-row: 1 / 3; }
+  .antes-juego h3 { margin: .2rem 0 .4rem; font-size: 1.25rem; }
+  .antes-juego p { font-size: 1.04rem; line-height: 1.6; max-width: 46ch; }
+  @media (max-width: 760px) { .antes-juego { grid-template-columns: 1fr; } }
+  .juego-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
+  @media (max-width: 860px) { .juego-grid { grid-template-columns: 1fr; } }
+  .pantallita { border-radius: 18px; overflow: hidden; border: 3px solid rgba(243,251,250,.25); aspect-ratio: 16 / 10; background: #1590c8; }
+  .pantallita svg { width: 100%; height: 100%; display: block; }
+  .pasos { list-style: none; counter-reset: p; margin-top: 1.6rem; display: grid; gap: 1rem; max-width: 560px; }
+  .pasos li { counter-increment: p; display: grid; grid-template-columns: 2.4rem 1fr; gap: .8rem; font-size: 1.02rem; }
+  .pasos li::before { content: counter(p); width: 2.1rem; height: 2.1rem; border-radius: 50%; display: grid; place-items: center; background: var(--sol); color: var(--abismo); font-family: var(--display); font-weight: 800; }
+  .boton.grande { font-size: 1.3rem; padding: 1.05rem 2rem; margin-top: 2rem; }
+
+  /* ===== Preguntas ===== */
+  .preguntas { max-width: 820px; margin-top: 2rem; }
+  details { border-top: 1px solid rgba(243,251,250,.25); padding: 1.1rem 0; }
+  details:last-child { border-bottom: 1px solid rgba(243,251,250,.25); }
+  summary { cursor: pointer; font-family: var(--display); font-weight: 600; font-size: clamp(1.1rem, 2vw, 1.3rem); list-style: none; display: flex; justify-content: space-between; gap: 1rem; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '+'; color: var(--sol); font-size: 1.5rem; line-height: 1; transition: transform .2s; }
+  details[open] summary::after { transform: rotate(45deg); }
+  details p { margin-top: .8rem; font-size: 1.04rem; max-width: var(--medida); }
+
+  /* ===== Quiénes somos y fuentes ===== */
+  .nosotros-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 3rem; }
+  @media (max-width: 860px) { .nosotros-grid { grid-template-columns: 1fr; } }
+  .nosotros-grid h3 { margin-top: 0; }
+  .equipo { list-style: none; columns: 2; column-gap: 1.5rem; margin-top: 1rem; font-family: var(--display); }
+  .refs { list-style: none; font-size: .9rem; line-height: 1.5; margin-top: 1rem; }
+  .refs li { margin-bottom: .75rem; padding-left: 1.4em; text-indent: -1.4em; }
+  .refs a { color: #9FDFF0; word-break: break-word; }
+  .cierre { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid rgba(243,251,250,.2); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; font-family: var(--display); font-size: .95rem; }
+</style>
+</head>
+<body>
+
+<!-- Regla de profundidad: cada sección es un poco más honda en la bahía -->
+<nav class="regla" aria-label="Secciones de la página">
+  <a href="#inicio"><span class="nombre">Inicio</span><span class="m">0 m</span><span class="marca"></span></a>
+  <a href="#problema"><span class="nombre">Qué le pasa al agua</span><span class="m">5 m</span><span class="marca"></span></a>
+  <a href="#impacto"><span class="nombre">Del agua a tu mesa</span><span class="m">10 m</span><span class="marca"></span></a>
+  <a href="#afectados"><span class="nombre">A quién afecta</span><span class="m">15 m</span><span class="marca"></span></a>
+  <a href="#solucion"><span class="nombre">Nuestra solución</span><span class="m">20 m</span><span class="marca"></span></a>
+  <a href="#tu-parte"><span class="nombre">Lo que puedes hacer</span><span class="m">25 m</span><span class="marca"></span></a>
+  <a href="#propuestas"><span class="nombre">Lo que proponemos</span><span class="m">30 m</span><span class="marca"></span></a>
+  <a href="#preguntas"><span class="nombre">Preguntas</span><span class="m">35 m</span><span class="marca"></span></a>
+  <a href="#juego"><span class="nombre">Juega Océano Limpio</span><span class="m">40 m</span><span class="marca"></span></a>
+  <a href="#nosotros"><span class="nombre">Quiénes somos</span><span class="m">45 m</span><span class="marca"></span></a>
+</nav>
+
+<!-- ============ PORTADA ============ -->
+<header class="portada" id="inicio">
+
+  <div class="titular">
+    <p class="marca-proyecto">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="#0E5E86"/><path d="M6 24c4-3 8-3 12 0s8 3 12 0 6-2 6-2" stroke="#F3FBFA" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M20 7s5 5.5 5 9a5 5 0 0 1-10 0c0-3.5 5-9 5-9z" fill="#F6C445"/></svg>
+      Océano Limpio
+    </p>
+    <h1><span class="linea">El agua nos devuelve</span><span class="linea">todo lo que le damos.</span></h1>
+    <p class="bajada">Lo que botamos por el desagüe y a la calle termina en el mar y en la Ciénaga Grande. Allí afecta a los peces, a quienes viven de la pesca y a las empresas que venden al mundo lo que sale de nuestras aguas. Este proyecto te muestra cómo pasa y qué podemos hacer.</p>
+    <div class="acciones">
+      <a class="boton" href="#problema">Entender el problema</a>
+    </div>
+  </div>
+<svg class="paisaje" viewBox="0 0 1440 440" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="mar" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#3EC6D6"/><stop offset=".22" stop-color="#1CA3CC"/><stop offset=".55" stop-color="#127AA6"/><stop offset="1" stop-color="#0A4A70"/>
+      </linearGradient>
+      <linearGradient id="sierra" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#86AEC0"/><stop offset="1" stop-color="#B6D3DB"/></linearGradient>
+      <linearGradient id="casco" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#23415F"/><stop offset="1" stop-color="#132A40"/></linearGradient>
+      <linearGradient id="reflejo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0A2A40" stop-opacity=".45"/><stop offset="1" stop-color="#0A2A40" stop-opacity="0"/></linearGradient>
+      <radialGradient id="aceite" cx=".5" cy=".5" r=".5">
+        <stop offset="0" stop-color="#1E2A2A" stop-opacity=".55"/><stop offset=".45" stop-color="#7B5EA7" stop-opacity=".35"/><stop offset=".7" stop-color="#3FB6A8" stop-opacity=".3"/><stop offset=".88" stop-color="#E9C46A" stop-opacity=".25"/><stop offset="1" stop-color="#E9C46A" stop-opacity="0"/>
+      </radialGradient>
+      <pattern id="costillas" width="4" height="20" patternUnits="userSpaceOnUse"><rect width="1.3" height="20" fill="#000" opacity=".18"/></pattern>
+    </defs>
+
+    <!-- Pelícanos -->
+    <g fill="none" stroke="#2E4B60" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".7">
+      <path d="M1120 70 q10 -9 20 0 q10 -9 20 0"/><path d="M1180 48 q8 -7 16 0 q8 -7 16 0"/><path d="M1240 82 q7 -6 14 0 q7 -6 14 0"/>
+    </g>
+
+    <!-- Sierra Nevada al fondo -->
+    <path d="M0 150 L110 110 L200 128 L310 62 L400 98 L500 26 L585 74 L670 44 L770 92 L860 58 L980 104 L1100 80 L1220 116 L1330 96 L1440 112 L1440 190 L0 190 Z" fill="url(#sierra)" opacity=".8"/>
+    <path d="M482 44 L500 26 L522 46 L510 42 L500 52 L490 42 Z M654 58 L670 44 L688 58 L677 56 L670 64 L663 56 Z M296 74 L310 62 L325 75 L316 72 L310 78 L304 72 Z" fill="#F3FBFA" opacity=".95"/>
+
+    <!-- Cerros de la bahía -->
+    <path d="M0 186 C70 140 150 128 230 146 C300 162 330 132 400 136 C460 140 500 170 540 188 L0 192 Z" fill="#3E7A4B"/>
+    <path d="M30 186 C90 160 140 154 200 166" fill="none" stroke="#2F6339" stroke-width="3" opacity=".6"/>
+    <path d="M1040 188 C1110 150 1180 132 1260 126 C1340 120 1400 140 1440 150 L1440 192 L1020 192 Z" fill="#356B41"/>
+    <path d="M1120 176 C1180 156 1240 150 1300 150" fill="none" stroke="#28553A" stroke-width="3" opacity=".6"/>
+
+
+    <g class="ola-frente">
+      <!-- Océano -->
+      <rect x="0" y="182" width="1440" height="258" fill="url(#mar)"/>
+      <path d="M0 182 C120 177 240 187 360 182 S600 187 720 182 S960 187 1080 182 S1320 187 1440 182" fill="none" stroke="#F3FBFA" stroke-width="2.5" opacity=".85"/>
+      <!-- bandas de oleaje -->
+      <path d="M0 236 C160 222 320 250 480 236 S800 222 960 236 S1280 250 1440 236 L1440 440 L0 440Z" fill="#FFFFFF" opacity=".05"/>
+      <path d="M0 300 C180 284 360 316 540 300 S900 284 1080 300 S1350 314 1440 302 L1440 440 L0 440Z" fill="#05304C" opacity=".14"/>
+      <path d="M0 370 C200 354 400 386 600 370 S1000 354 1200 370 S1400 380 1440 372 L1440 440 L0 440Z" fill="#05304C" opacity=".18"/>
+      <!-- El Morro con su faro -->
+    <g transform="translate(250 30)">
+      <path d="M-46 186 C-40 160 -26 146 -8 142 C8 138 22 150 32 166 C38 176 44 182 50 186 Z" fill="#6E6B5B"/>
+      <path d="M-30 156 C-18 146 0 142 14 146 C22 150 26 156 28 160 C10 152 -10 152 -30 156 Z" fill="#4C7D46"/>
+      <!-- Faro -->
+      <g class="faro">
+        <defs>
+          <linearGradient id="hazIzq" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#FFF3B0" stop-opacity=".75"/><stop offset="1" stop-color="#FFF3B0" stop-opacity="0"/></linearGradient>
+          <linearGradient id="hazDer" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFF3B0" stop-opacity=".75"/><stop offset="1" stop-color="#FFF3B0" stop-opacity="0"/></linearGradient>
+          <radialGradient id="resplandor"><stop offset="0" stop-color="#FFF6C8" stop-opacity=".95"/><stop offset=".4" stop-color="#F6C445" stop-opacity=".55"/><stop offset="1" stop-color="#F6C445" stop-opacity="0"/></radialGradient>
+          <linearGradient id="torre" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".65" stop-color="#F3FBFA"/><stop offset="1" stop-color="#C9D6DD"/></linearGradient>
+          <clipPath id="formaTorre"><path d="M-7 146 L-3.5 104 L9.5 104 L13 146 Z"/></clipPath>
+        </defs>
+        <!-- haces de luz -->
+        <g class="faro-luz">
+          <path d="M3 97 L-150 72 L-150 112 Z" fill="url(#hazIzq)"/>
+          <path d="M3 97 L160 76 L160 114 Z" fill="url(#hazDer)"/>
+          <circle cx="3" cy="97" r="16" fill="url(#resplandor)"/>
+        </g>
+        <!-- casita del farero -->
+        <rect x="-20" y="137" width="14" height="10" fill="#F3FBFA"/>
+        <path d="M-22 138 L-13 131 L-4 138 Z" fill="#B83A3A"/>
+        <rect x="-16" y="140" width="4" height="7" fill="#16324F"/>
+        <!-- torre con franjas -->
+        <path d="M-7 146 L-3.5 104 L9.5 104 L13 146 Z" fill="url(#torre)"/>
+        <g clip-path="url(#formaTorre)" fill="#C0392B">
+          <rect x="-10" y="110" width="26" height="7"/><rect x="-10" y="124" width="26" height="7"/><rect x="-10" y="138" width="26" height="8"/>
+        </g>
+        <path d="M-7 146 L-3.5 104 L9.5 104 L13 146 Z" fill="none" stroke="#7D8E99" stroke-width=".8"/>
+        <path d="M1.5 146 v-6 a1.5 1.5 0 0 1 3 0 v6 Z" fill="#16324F"/>
+        <rect x="1.8" y="119" width="2.4" height="3.4" rx=".6" fill="#16324F"/>
+        <!-- balcón con baranda -->
+        <rect x="-7" y="101.5" width="20" height="3" fill="#16324F"/>
+        <path d="M-6 101.5 V97.5 H12 V101.5 M-3 101.5 V97.5 M0 101.5 V97.5 M6 101.5 V97.5 M9 101.5 V97.5" fill="none" stroke="#16324F" stroke-width=".9"/>
+        <!-- linterna -->
+        <rect x="-2" y="90" width="10" height="9" fill="#FFF3B0"/>
+        <path d="M-2 90 h10 v9 h-10 Z M1.3 90 v9 M4.7 90 v9" fill="none" stroke="#16324F" stroke-width="1"/>
+        <!-- cúpula -->
+        <path d="M-3.5 90 Q3 81 9.5 90 Z" fill="#C0392B"/>
+        <path d="M3 83.5 V79" stroke="#16324F" stroke-width="1.2"/><circle cx="3" cy="78.5" r="1.3" fill="#16324F"/>
+      </g>
+      
+    </g>
+      <path d="M190 218 q60 -6 120 0" stroke="#F3FBFA" stroke-width="2" fill="none" opacity=".6"/>
+      <!-- brillos y espuma -->
+      <g stroke="#F3FBFA" stroke-linecap="round" fill="none">
+        <path d="M470 226 q11 -3.1 23 0" stroke-width="1.5" opacity="0.28"/>
+        <path d="M63 294 q6 -2.6 12 0" stroke-width="1.9" opacity="0.28"/>
+        <path d="M613 388 q10 -3.0 19 0" stroke-width="2.5" opacity="0.33"/>
+        <path d="M901 417 q21 -4.1 41 0" stroke-width="2.7" opacity="0.39"/>
+        <path d="M1396 201 q12 -3.2 24 0" stroke-width="1.3" opacity="0.35"/>
+        <path d="M215 218 q7 -2.7 14 0" stroke-width="1.4" opacity="0.54"/>
+        <path d="M267 330 q17 -3.7 34 0" stroke-width="2.1" opacity="0.38"/>
+        <path d="M788 205 q4 -2.4 8 0" stroke-width="1.3" opacity="0.32"/>
+        <path d="M357 328 q15 -3.5 30 0" stroke-width="2.1" opacity="0.56"/>
+        <path d="M604 372 q10 -3.0 19 0" stroke-width="2.4" opacity="0.42"/>
+        <path d="M66 350 q21 -4.1 41 0" stroke-width="2.3" opacity="0.45"/>
+        <path d="M1253 265 q14 -3.4 28 0" stroke-width="1.7" opacity="0.46"/>
+        <path d="M683 349 q7 -2.7 15 0" stroke-width="2.2" opacity="0.50"/>
+        <path d="M929 428 q27 -4.7 54 0" stroke-width="2.7" opacity="0.35"/>
+        <path d="M558 350 q7 -2.7 13 0" stroke-width="2.3" opacity="0.41"/>
+        <path d="M249 218 q4 -2.4 9 0" stroke-width="1.4" opacity="0.52"/>
+        <path d="M194 249 q9 -2.9 19 0" stroke-width="1.6" opacity="0.55"/>
+        <path d="M124 298 q14 -3.4 28 0" stroke-width="1.9" opacity="0.56"/>
+        <path d="M1173 397 q13 -3.3 26 0" stroke-width="2.5" opacity="0.40"/>
+        <path d="M519 402 q28 -4.8 56 0" stroke-width="2.6" opacity="0.30"/>
+        <path d="M260 246 q7 -2.7 14 0" stroke-width="1.6" opacity="0.42"/>
+        <path d="M534 326 q22 -4.2 45 0" stroke-width="2.1" opacity="0.49"/>
+        <path d="M742 338 q18 -3.8 36 0" stroke-width="2.2" opacity="0.27"/>
+        <path d="M1287 377 q24 -4.4 49 0" stroke-width="2.4" opacity="0.53"/>
+        <path d="M98 206 q6 -2.6 11 0" stroke-width="1.4" opacity="0.31"/>
+        <path d="M493 203 q3 -2.3 7 0" stroke-width="1.3" opacity="0.30"/>
+        <path d="M154 277 q5 -2.5 10 0" stroke-width="1.8" opacity="0.56"/>
+        <path d="M527 219 q13 -3.3 26 0" stroke-width="1.4" opacity="0.60"/>
+        <path d="M672 306 q7 -2.7 14 0" stroke-width="2.0" opacity="0.29"/>
+        <path d="M497 254 q15 -3.5 31 0" stroke-width="1.6" opacity="0.31"/>
+        <path d="M43 418 q19 -3.9 39 0" stroke-width="2.7" opacity="0.30"/>
+        <path d="M781 196 q8 -2.8 17 0" stroke-width="1.3" opacity="0.59"/>
+        <path d="M1236 357 q11 -3.1 23 0" stroke-width="2.3" opacity="0.38"/>
+        <path d="M247 375 q17 -3.7 35 0" stroke-width="2.4" opacity="0.52"/>
+        <path d="M478 244 q14 -3.4 29 0" stroke-width="1.6" opacity="0.59"/>
+        <path d="M1221 383 q24 -4.4 48 0" stroke-width="2.5" opacity="0.51"/>
+        <path d="M332 314 q11 -3.1 23 0" stroke-width="2.0" opacity="0.26"/>
+        <path d="M50 257 q8 -2.8 16 0" stroke-width="1.7" opacity="0.49"/>
+      </g>
+      <ellipse class="mancha" cx="230" cy="352" rx="150" ry="24" fill="url(#aceite)"/>
+      <ellipse cx="1290" cy="300" rx="80" ry="12" fill="url(#aceite)" opacity=".7"/>
+      <g class="flota" style="animation-delay:2.9s" transform="translate(470 395) rotate(30) scale(1.3)" opacity="0.35"><path d="M-14 -6 Q-19 8 -12 16 Q0 21 12 16 Q19 8 14 -6 Q0 -3 -14 -6Z" fill="#F4F7FB" stroke="#C5CEDB" stroke-width="1.2"/><path d="M-11 -6 Q-10 -17 -3 -6 M3 -6 Q10 -17 11 -6" fill="none" stroke="#C5CEDB" stroke-width="1.4"/><path d="M-6 0 Q-3 8 -7 13 M4 -1 Q7 7 3 13" fill="none" stroke="#D3DAE5" stroke-width="1"/></g>
+      <g class="flota" style="animation-delay:1.3s" transform="translate(760 410) rotate(75) scale(1.2)" opacity="0.35"><rect x="-6" y="-15" width="12" height="30" rx="4.5" fill="#D6F2FF"/><rect x="-6" y="-15" width="12" height="30" rx="4.5" fill="none" stroke="#7FB8D1" stroke-width="1"/><rect x="-6" y="-3" width="12" height="8" fill="#F4A261"/><rect x="-3.5" y="-21" width="7" height="6" rx="1.2" fill="#1D4ED8"/><rect x="-4" y="-11" width="2" height="20" rx="1" fill="#fff" opacity=".7"/></g>
+      <g class="flota" style="animation-delay:2.9s" transform="translate(1110 400) rotate(40) scale(1.1)" opacity="0.3"><rect x="-7" y="-11" width="14" height="22" rx="2" fill="#2B6CB0"/><rect x="-7" y="-3" width="14" height="5" fill="#fff" opacity=".85"/><ellipse cx="0" cy="-11" rx="7" ry="2.4" fill="#CBD5DD"/><rect x="-4" y="-9" width="2" height="18" fill="#fff" opacity=".35"/></g>
+      <g class="flota" style="animation-delay:1.1s" transform="translate(260 410) rotate(-30) scale(1.1)" opacity="0.3"><path d="M-8 -10 L8 -10 L6 12 L-6 12Z" fill="#fff"/><rect x="-9" y="-13" width="18" height="4" rx="1.5" fill="#E9EEF3"/><path d="M2 -13 L7 -26" stroke="#F15BB5" stroke-width="2.5" stroke-linecap="round"/><path d="M-7 -2 L7 -2" stroke="#F6C445" stroke-width="3"/></g>
+      <g class="flota" style="animation-delay:0.7s" transform="translate(1360 405) rotate(-20) scale(1.1)" opacity="0.3"><path d="M-14 -6 Q-19 8 -12 16 Q0 21 12 16 Q19 8 14 -6 Q0 -3 -14 -6Z" fill="#F4F7FB" stroke="#C5CEDB" stroke-width="1.2"/><path d="M-11 -6 Q-10 -17 -3 -6 M3 -6 Q10 -17 11 -6" fill="none" stroke="#C5CEDB" stroke-width="1.4"/><path d="M-6 0 Q-3 8 -7 13 M4 -1 Q7 7 3 13" fill="none" stroke="#D3DAE5" stroke-width="1"/></g>
+      <g transform="translate(520 404) scale(-1.1 1.1)" opacity=".55"><path d="M-14 0 C-6 -8 8 -8 14 0 C8 8 -6 8 -14 0Z" fill="#F4A261"/><path d="M-14 0 L-22 -6 L-22 6Z" fill="#F4A261"/><circle cx="8" cy="-1.5" r="1.4" fill="#0A2A40"/></g>
+      <g transform="translate(1180 418) scale(0.9 0.9)" opacity=".55"><path d="M-14 0 C-6 -8 8 -8 14 0 C8 8 -6 8 -14 0Z" fill="#F4A261"/><path d="M-14 0 L-22 -6 L-22 6Z" fill="#F4A261"/><circle cx="8" cy="-1.5" r="1.4" fill="#0A2A40"/></g>
+      <g class="barco">
+        <ellipse cx="790" cy="276" rx="250" ry="10" fill="url(#reflejo)"/>
+        <path d="M560 268 C600 280 980 280 1030 268" fill="none" stroke="#F3FBFA" stroke-width="2" opacity=".6"/>
+        <!-- estela -->
+        <path d="M1030 262 C1080 264 1130 270 1200 268 M1030 270 C1090 276 1150 282 1230 280" fill="none" stroke="#F3FBFA" stroke-width="2.5" stroke-linecap="round" opacity=".55"/>
+        <rect x="612" y="206" width="40" height="19" fill="#3E7A4B"/><rect x="612" y="206" width="40" height="19" fill="url(#costillas)"/><rect x="612" y="206" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="654" y="206" width="40" height="19" fill="#F3FBFA"/><rect x="654" y="206" width="40" height="19" fill="url(#costillas)"/><rect x="654" y="206" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="696" y="206" width="40" height="19" fill="#3E7A4B"/><rect x="696" y="206" width="40" height="19" fill="url(#costillas)"/><rect x="696" y="206" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="738" y="206" width="40" height="19" fill="#E07A2E"/><rect x="738" y="206" width="40" height="19" fill="url(#costillas)"/><rect x="738" y="206" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="780" y="206" width="40" height="19" fill="#3E7A4B"/><rect x="780" y="206" width="40" height="19" fill="url(#costillas)"/><rect x="780" y="206" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="822" y="206" width="40" height="19" fill="#F3FBFA"/><rect x="822" y="206" width="40" height="19" fill="url(#costillas)"/><rect x="822" y="206" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="864" y="206" width="40" height="19" fill="#0E5E86"/><rect x="864" y="206" width="40" height="19" fill="url(#costillas)"/><rect x="864" y="206" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="906" y="206" width="40" height="19" fill="#F3FBFA"/><rect x="906" y="206" width="40" height="19" fill="url(#costillas)"/><rect x="906" y="206" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="633" y="186" width="40" height="19" fill="#E07A2E"/><rect x="633" y="186" width="40" height="19" fill="url(#costillas)"/><rect x="633" y="186" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="675" y="186" width="40" height="19" fill="#F6C445"/><rect x="675" y="186" width="40" height="19" fill="url(#costillas)"/><rect x="675" y="186" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="717" y="186" width="40" height="19" fill="#F6C445"/><rect x="717" y="186" width="40" height="19" fill="url(#costillas)"/><rect x="717" y="186" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="759" y="186" width="40" height="19" fill="#1FA3A6"/><rect x="759" y="186" width="40" height="19" fill="url(#costillas)"/><rect x="759" y="186" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="801" y="186" width="40" height="19" fill="#3E7A4B"/><rect x="801" y="186" width="40" height="19" fill="url(#costillas)"/><rect x="801" y="186" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="843" y="186" width="40" height="19" fill="#F3FBFA"/><rect x="843" y="186" width="40" height="19" fill="url(#costillas)"/><rect x="843" y="186" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="885" y="186" width="40" height="19" fill="#D9534F"/><rect x="885" y="186" width="40" height="19" fill="url(#costillas)"/><rect x="885" y="186" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="675" y="166" width="40" height="19" fill="#1FA3A6"/><rect x="675" y="166" width="40" height="19" fill="url(#costillas)"/><rect x="675" y="166" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="717" y="166" width="40" height="19" fill="#E07A2E"/><rect x="717" y="166" width="40" height="19" fill="url(#costillas)"/><rect x="717" y="166" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="759" y="166" width="40" height="19" fill="#F6C445"/><rect x="759" y="166" width="40" height="19" fill="url(#costillas)"/><rect x="759" y="166" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="801" y="166" width="40" height="19" fill="#1FA3A6"/><rect x="801" y="166" width="40" height="19" fill="url(#costillas)"/><rect x="801" y="166" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <rect x="843" y="166" width="40" height="19" fill="#F3FBFA"/><rect x="843" y="166" width="40" height="19" fill="url(#costillas)"/><rect x="843" y="166" width="40" height="19" fill="none" stroke="#0A2A40" stroke-opacity=".35"/>
+        <!-- casco -->
+        <path d="M548 222 L1012 222 L1004 266 C1002 270 998 272 992 272 L600 272 C580 270 562 252 548 222 Z" fill="url(#casco)"/>
+        <path d="M566 258 L1006 258 L1004 266 C1002 270 998 272 992 272 L600 272 C588 271 576 265 566 258 Z" fill="#B83A3A"/>
+        <path d="M553 230 L1011 230" stroke="#F3FBFA" stroke-width="2" opacity=".75"/>
+        <text x="610" y="250" font-family="Bricolage Grotesque, system-ui, sans-serif" font-weight="800" font-size="13" letter-spacing="2" fill="#F3FBFA" opacity=".9">CARIBE EXPRESS</text>
+        <circle cx="960" cy="245" r="3" fill="#F3FBFA" opacity=".5"/><circle cx="975" cy="245" r="3" fill="#F3FBFA" opacity=".5"/>
+        <!-- mástil de proa -->
+        <path d="M580 222 V176" stroke="#0A2A40" stroke-width="3"/><circle cx="580" cy="174" r="3" fill="#F6C445"/>
+        <!-- puente de mando -->
+        <rect x="944" y="150" width="58" height="72" fill="#F3FBFA"/>
+        <rect x="936" y="150" width="74" height="7" fill="#E3ECF1"/>
+        <g fill="#16324F"><rect x="950" y="161" width="46" height="7" rx="1"/><rect x="950" y="176" width="46" height="5" rx="1" opacity=".75"/><rect x="950" y="189" width="46" height="5" rx="1" opacity=".75"/><rect x="950" y="202" width="46" height="5" rx="1" opacity=".75"/></g>
+        <!-- chimenea -->
+        <path d="M970 150 L974 122 L996 122 L998 150 Z" fill="#F6C445"/><rect x="973" y="122" width="24" height="7" fill="#16324F"/><rect x="973" y="134" width="24" height="5" fill="#0E5E86"/>
+        <path d="M985 118 C978 104 992 96 984 84" fill="none" stroke="#B9C6CF" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+        <path d="M960 150 V138 M960 138 H952" stroke="#0A2A40" stroke-width="2"/>
+        <!-- espuma en la proa -->
+        <path d="M546 266 C556 258 566 262 574 270 C566 276 552 276 546 266 Z" fill="#F3FBFA" opacity=".85"/>
+        <path d="M534 272 q8 -4 16 0 M520 276 q7 -3 14 0" stroke="#F3FBFA" stroke-width="2" fill="none" stroke-linecap="round" opacity=".7"/>
+      </g>
+      <g class="flota" style="animation-delay:1.2s" transform="translate(120 262) rotate(70) scale(1.1)" opacity="1"><rect x="-6" y="-15" width="12" height="30" rx="4.5" fill="#D6F2FF"/><rect x="-6" y="-15" width="12" height="30" rx="4.5" fill="none" stroke="#7FB8D1" stroke-width="1"/><rect x="-6" y="-3" width="12" height="8" fill="#E63946"/><rect x="-3.5" y="-21" width="7" height="6" rx="1.2" fill="#1D4ED8"/><rect x="-4" y="-11" width="2" height="20" rx="1" fill="#fff" opacity=".7"/></g>
+      <g class="flota" style="animation-delay:2.2s" transform="translate(420 250) rotate(-10) scale(1.0)" opacity="0.85"><path d="M-14 -6 Q-19 8 -12 16 Q0 21 12 16 Q19 8 14 -6 Q0 -3 -14 -6Z" fill="#F4F7FB" stroke="#C5CEDB" stroke-width="1.2"/><path d="M-11 -6 Q-10 -17 -3 -6 M3 -6 Q10 -17 11 -6" fill="none" stroke="#C5CEDB" stroke-width="1.4"/><path d="M-6 0 Q-3 8 -7 13 M4 -1 Q7 7 3 13" fill="none" stroke="#D3DAE5" stroke-width="1"/></g>
+      <g class="flota" style="animation-delay:3.0s" transform="translate(500 292) rotate(50) scale(1.0)" opacity="1"><rect x="-7" y="-11" width="14" height="22" rx="2" fill="#D62828"/><rect x="-7" y="-3" width="14" height="5" fill="#fff" opacity=".85"/><ellipse cx="0" cy="-11" rx="7" ry="2.4" fill="#CBD5DD"/><rect x="-4" y="-9" width="2" height="18" fill="#fff" opacity=".35"/></g>
+      <g class="flota" style="animation-delay:0.1s" transform="translate(1080 250) rotate(20) scale(1.0)" opacity="1"><path d="M-8 -10 L8 -10 L6 12 L-6 12Z" fill="#fff"/><rect x="-9" y="-13" width="18" height="4" rx="1.5" fill="#E9EEF3"/><path d="M2 -13 L7 -26" stroke="#F15BB5" stroke-width="2.5" stroke-linecap="round"/><path d="M-7 -2 L7 -2" stroke="#F6C445" stroke-width="3"/></g>
+      <g class="flota" style="animation-delay:1.8s" transform="translate(1210 290) rotate(0) scale(1.0)" opacity="1"><ellipse rx="22" ry="9" fill="none" stroke="#1C1C1E" stroke-width="9"/><ellipse rx="22" ry="9" fill="none" stroke="#3A3A3E" stroke-width="2" stroke-dasharray="3 4"/><ellipse rx="10" ry="3.5" fill="#0E5E86" opacity=".6"/></g>
+      <g class="flota" style="animation-delay:1.4s" transform="translate(1350 258) rotate(-65) scale(1.0)" opacity="1"><rect x="-6" y="-15" width="12" height="30" rx="4.5" fill="#D6F2FF"/><rect x="-6" y="-15" width="12" height="30" rx="4.5" fill="none" stroke="#7FB8D1" stroke-width="1"/><rect x="-6" y="-3" width="12" height="8" fill="#F4A261"/><rect x="-3.5" y="-21" width="7" height="6" rx="1.2" fill="#1D4ED8"/><rect x="-4" y="-11" width="2" height="20" rx="1" fill="#fff" opacity=".7"/></g>
+      <g class="flota" style="animation-delay:0.4s" transform="translate(680 312) rotate(-8) scale(1.2)" opacity="0.9"><clipPath id="cn680"><ellipse rx="30" ry="11"/></clipPath><g clip-path="url(#cn680)" stroke="#E07A2E" stroke-width="1.3" fill="none"><path d="M-42 -16 L-14 16 M-14 -16 L-42 16"/><path d="M-35 -16 L-7 16 M-7 -16 L-35 16"/><path d="M-28 -16 L0 16 M0 -16 L-28 16"/><path d="M-21 -16 L7 16 M7 -16 L-21 16"/><path d="M-14 -16 L14 16 M14 -16 L-14 16"/><path d="M-7 -16 L21 16 M21 -16 L-7 16"/><path d="M0 -16 L28 16 M28 -16 L0 16"/><path d="M7 -16 L35 16 M35 -16 L7 16"/><path d="M14 -16 L42 16 M42 -16 L14 16"/></g><ellipse rx="30" ry="11" fill="none" stroke="#B85C1A" stroke-width="2" stroke-dasharray="5 3"/><circle cx="24" cy="-6" r="5" fill="#FF8C2B"/><circle cx="-26" cy="5" r="4" fill="#fff"/></g>
+      <g class="flota" style="animation-delay:2.9s" transform="translate(880 304) rotate(-35) scale(1.1)" opacity="1"><rect x="-7" y="-11" width="14" height="22" rx="2" fill="#2F855A"/><rect x="-7" y="-3" width="14" height="5" fill="#fff" opacity=".85"/><ellipse cx="0" cy="-11" rx="7" ry="2.4" fill="#CBD5DD"/><rect x="-4" y="-9" width="2" height="18" fill="#fff" opacity=".35"/></g>
+      <g class="flota" style="animation-delay:2.0s" transform="translate(160 330) rotate(15) scale(1.4)" opacity="0.85"><path d="M-14 -6 Q-19 8 -12 16 Q0 21 12 16 Q19 8 14 -6 Q0 -3 -14 -6Z" fill="#F4F7FB" stroke="#C5CEDB" stroke-width="1.2"/><path d="M-11 -6 Q-10 -17 -3 -6 M3 -6 Q10 -17 11 -6" fill="none" stroke="#C5CEDB" stroke-width="1.4"/><path d="M-6 0 Q-3 8 -7 13 M4 -1 Q7 7 3 13" fill="none" stroke="#D3DAE5" stroke-width="1"/></g>
+      <g class="flota" style="animation-delay:1.1s" transform="translate(330 318) rotate(100) scale(1.5)" opacity="1"><rect x="-6" y="-15" width="12" height="30" rx="4.5" fill="#D6F2FF"/><rect x="-6" y="-15" width="12" height="30" rx="4.5" fill="none" stroke="#7FB8D1" stroke-width="1"/><rect x="-6" y="-3" width="12" height="8" fill="#F4A261"/><rect x="-3.5" y="-21" width="7" height="6" rx="1.2" fill="#1D4ED8"/><rect x="-4" y="-11" width="2" height="20" rx="1" fill="#fff" opacity=".7"/></g>
+      <g class="flota" style="animation-delay:1.6s" transform="translate(1000 328) rotate(-25) scale(1.3)" opacity="1"><path d="M-8 -10 L8 -10 L6 12 L-6 12Z" fill="#fff"/><rect x="-9" y="-13" width="18" height="4" rx="1.5" fill="#E9EEF3"/><path d="M2 -13 L7 -26" stroke="#F15BB5" stroke-width="2.5" stroke-linecap="round"/><path d="M-7 -2 L7 -2" stroke="#F6C445" stroke-width="3"/></g>
+      <g class="flota" style="animation-delay:0.1s" transform="translate(1300 342) rotate(60) scale(1.6)" opacity="1"><rect x="-6" y="-15" width="12" height="30" rx="4.5" fill="#D6F2FF"/><rect x="-6" y="-15" width="12" height="30" rx="4.5" fill="none" stroke="#7FB8D1" stroke-width="1"/><rect x="-6" y="-3" width="12" height="8" fill="#F4A261"/><rect x="-3.5" y="-21" width="7" height="6" rx="1.2" fill="#1D4ED8"/><rect x="-4" y="-11" width="2" height="20" rx="1" fill="#fff" opacity=".7"/></g>
+      <g class="flota" style="animation-delay:1.9s" transform="translate(560 360) rotate(0) scale(1.5)" opacity="1"><ellipse rx="22" ry="9" fill="none" stroke="#1C1C1E" stroke-width="9"/><ellipse rx="22" ry="9" fill="none" stroke="#3A3A3E" stroke-width="2" stroke-dasharray="3 4"/><ellipse rx="10" ry="3.5" fill="#0E5E86" opacity=".6"/></g>
+      <g class="flota" style="animation-delay:2.2s" transform="translate(760 372) rotate(70) scale(1.6)" opacity="1"><rect x="-7" y="-11" width="14" height="22" rx="2" fill="#2F855A"/><rect x="-7" y="-3" width="14" height="5" fill="#fff" opacity=".85"/><ellipse cx="0" cy="-11" rx="7" ry="2.4" fill="#CBD5DD"/><rect x="-4" y="-9" width="2" height="18" fill="#fff" opacity=".35"/></g>
+      <g class="flota" style="animation-delay:0.4s" transform="translate(980 388) rotate(-12) scale(1.8)" opacity="0.85"><path d="M-14 -6 Q-19 8 -12 16 Q0 21 12 16 Q19 8 14 -6 Q0 -3 -14 -6Z" fill="#F4F7FB" stroke="#C5CEDB" stroke-width="1.2"/><path d="M-11 -6 Q-10 -17 -3 -6 M3 -6 Q10 -17 11 -6" fill="none" stroke="#C5CEDB" stroke-width="1.4"/><path d="M-6 0 Q-3 8 -7 13 M4 -1 Q7 7 3 13" fill="none" stroke="#D3DAE5" stroke-width="1"/></g>
+      <g class="flota" style="animation-delay:3.0s" transform="translate(70 392) rotate(-75) scale(1.9)" opacity="1"><rect x="-6" y="-15" width="12" height="30" rx="4.5" fill="#D6F2FF"/><rect x="-6" y="-15" width="12" height="30" rx="4.5" fill="none" stroke="#7FB8D1" stroke-width="1"/><rect x="-6" y="-3" width="12" height="8" fill="#E63946"/><rect x="-3.5" y="-21" width="7" height="6" rx="1.2" fill="#1D4ED8"/><rect x="-4" y="-11" width="2" height="20" rx="1" fill="#fff" opacity=".7"/></g>
+      <g class="flota" style="animation-delay:2.5s" transform="translate(1400 400) rotate(10) scale(1.5)" opacity="0.9"><clipPath id="cn1400"><ellipse rx="30" ry="11"/></clipPath><g clip-path="url(#cn1400)" stroke="#E07A2E" stroke-width="1.3" fill="none"><path d="M-42 -16 L-14 16 M-14 -16 L-42 16"/><path d="M-35 -16 L-7 16 M-7 -16 L-35 16"/><path d="M-28 -16 L0 16 M0 -16 L-28 16"/><path d="M-21 -16 L7 16 M7 -16 L-21 16"/><path d="M-14 -16 L14 16 M14 -16 L-14 16"/><path d="M-7 -16 L21 16 M21 -16 L-7 16"/><path d="M0 -16 L28 16 M28 -16 L0 16"/><path d="M7 -16 L35 16 M35 -16 L7 16"/><path d="M14 -16 L42 16 M42 -16 L14 16"/></g><ellipse rx="30" ry="11" fill="none" stroke="#B85C1A" stroke-width="2" stroke-dasharray="5 3"/><circle cx="24" cy="-6" r="5" fill="#FF8C2B"/><circle cx="-26" cy="5" r="4" fill="#fff"/></g>
+      <g class="flota" style="animation-delay:0.6s" transform="translate(420 410) rotate(15) scale(1.7)" opacity="1"><path d="M-8 -10 L8 -10 L6 12 L-6 12Z" fill="#fff"/><rect x="-9" y="-13" width="18" height="4" rx="1.5" fill="#E9EEF3"/><path d="M2 -13 L7 -26" stroke="#F15BB5" stroke-width="2.5" stroke-linecap="round"/><path d="M-7 -2 L7 -2" stroke="#F6C445" stroke-width="3"/></g>
+      <g class="flota" style="animation-delay:0.6s" transform="translate(1180 362) rotate(-60) scale(1.4)" opacity="1"><rect x="-7" y="-11" width="14" height="22" rx="2" fill="#2B6CB0"/><rect x="-7" y="-3" width="14" height="5" fill="#fff" opacity=".85"/><ellipse cx="0" cy="-11" rx="7" ry="2.4" fill="#CBD5DD"/><rect x="-4" y="-9" width="2" height="18" fill="#fff" opacity=".35"/></g>
+    </g>
+  </svg>
+  <p class="pie-portada">Iniciativa académica de la Facultad de Ciencias Empresariales y Económicas, Universidad del Magdalena</p>
+</header>
+
+<main>
+<!-- ============ EL PROBLEMA ============ -->
+<section class="capa" id="problema" aria-labelledby="t-problema">
+  <div class="dentro">
+    <h2 id="t-problema">Lo que le está llegando a nuestra agua</h2>
+    <p class="entrada">Santa Marta vive del mar, de la Ciénaga Grande y de los ríos que bajan de la Sierra Nevada. Pero esos mismos cuerpos de agua reciben lo que la ciudad desecha. Los científicos que los vigilan han encontrado tres señales de alarma.</p>
+
+    <div class="llega">
+      <div>
+        <svg viewBox="0 0 64 64" fill="none" stroke="#0E5E86" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 14h20v10h12"/><path d="M38 24v8"/><path d="M8 40c6-4 12-4 18 0s12 4 18 0 10-3 14-1"/><path d="M8 50c6-4 12-4 18 0s12 4 18 0 10-3 14-1"/><circle cx="38" cy="36" r="2" fill="#0E5E86"/></svg>
+        <h3>Aguas residuales en la bahía</h3>
+        <p>Las aguas residuales de la ciudad llegan a la bahía por un tubo que las descarga bajo el mar, llamado emisario submarino. Los estudios muestran que esos vertimientos alteran el plancton, la base de la vida marina.</p>
+        <span class="dato-fuente">García-Rentería et al., 2023 · De La Hoz Roca, 2024 · Tette-Pomárico et al., 2026</span>
+      </div>
+      <div>
+        <svg viewBox="0 0 64 64" fill="none" stroke="#0E5E86" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 32c8-9 22-11 32-4l10-7v22l-10-7c-10 7-24 5-32-4z"/><circle cx="18" cy="31" r="1.6" fill="#0E5E86"/><circle cx="32" cy="34" r="2"/><circle cx="38" cy="29" r="1.4"/><circle cx="27" cy="27" r="1.2"/></svg>
+        <h3>Microplásticos en los peces</h3>
+        <p>En la Ciénaga Grande de Santa Marta se encontraron microplásticos en el agua, en el fondo y en peces que se venden para comer.</p>
+        <span class="dato-fuente">Garcés-Ordóñez et al., 2022</span>
+      </div>
+      <div>
+        <svg viewBox="0 0 64 64" fill="none" stroke="#0E5E86" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M32 8s14 15 14 26a14 14 0 0 1-28 0C18 23 32 8 32 8z"/><path d="M26 34h12M32 28v12"/></svg>
+        <h3>Metales pesados en la Ciénaga</h3>
+        <p>En la Ciénaga Grande también se han reportado metales pesados y cambios en la calidad del agua, que pueden afectar a los organismos y a toda la cadena alimentaria.</p>
+        <span class="dato-fuente">Aguirre Forero et al., 2021</span>
+      </div>
+    </div>
+
+    <p class="frase">Si cambia la calidad del agua, cambian también las condiciones que necesitan los peces para vivir.</p>
+  </div>
+</section>
+
+<!-- ============ EL IMPACTO ============ -->
+<section class="capa" id="impacto" aria-labelledby="t-impacto">
+  <div class="dentro">
+    <h2 id="t-impacto">Del agua a tu mesa, y de tu mesa al mundo</h2>
+    <p class="entrada">La contaminación no se queda en el agua: viaja por una cadena hasta llegar a tu comida y a la economía de la ciudad. Toca cada eslabón para ver cómo.</p>
+
+    <div class="cadena">
+      <ul class="eslabones" role="tablist" aria-label="Cadena del impacto">
+        <li class="eslabon"><button role="tab" id="tab-0" aria-controls="panel-cadena" aria-selected="true">
+          <span class="nodo"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></span>El agua</button></li>
+        <li class="eslabon"><button role="tab" id="tab-1" aria-controls="panel-cadena" aria-selected="false">
+          <span class="nodo"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9"/><path d="M12 13c-4 0-6-3-6-6 3 0 6 2 6 6z"/><path d="M12 11c4 0 6-3 6-6-3 0-6 2-6 6z"/><path d="M5 21c2-2 5-2 7 0 2-2 5-2 7 0"/></svg></span>Manglares y ciénaga</button></li>
+        <li class="eslabon"><button role="tab" id="tab-2" aria-controls="panel-cadena" aria-selected="false">
+          <span class="nodo"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c3-4 8-5 12-2l4-3v10l-4-3c-4 3-9 2-12-2z"/></svg></span>Los peces</button></li>
+        <li class="eslabon"><button role="tab" id="tab-3" aria-controls="panel-cadena" aria-selected="false">
+          <span class="nodo"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17h16l-2 4H6z"/><path d="M12 17V5l6 8h-6"/></svg></span>Pescadores y empresas</button></li>
+        <li class="eslabon"><button role="tab" id="tab-4" aria-controls="panel-cadena" aria-selected="false">
+          <span class="nodo"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></span>Lo que vendemos al mundo</button></li>
+      </ul>
+      <div class="panel" id="panel-cadena" role="tabpanel" aria-live="polite"></div>
+    </div>
+
+    <div class="ejemplo">
+      <svg viewBox="0 0 56 56" fill="none" stroke="#0E5E86" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M28 6 52 48H4z"/><path d="M28 22v12"/><circle cx="28" cy="41" r="1.5" fill="#0E5E86"/></svg>
+      <div>
+        <h4>Ya pasa en otros países</h4>
+        <p>En Indonesia se estudió el riesgo de que les devuelvan camarón exportado por estar contaminado con Salmonella. Cuando un producto del mar no es seguro, el mercado de afuera no lo compra. <span class="dato-fuente">Indrotristanto et al., 2023</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ A QUIÉN AFECTA ============ -->
+<section class="capa" id="afectados" aria-labelledby="t-afectados">
+  <div class="dentro">
+    <h2 id="t-afectados">No es solo un problema del mar</h2>
+    <p class="entrada">Cuando el agua se daña, el golpe lo sienten personas reales de nuestra ciudad.</p>
+    <div class="personas">
+      <article class="persona">
+        <svg viewBox="0 0 52 52" fill="none" stroke="#0A2A40" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="20" cy="14" r="6"/><path d="M10 44V30a10 10 0 0 1 20 0v14"/><path d="M34 8v26M34 8l10 14"/></svg>
+        <h3>Las familias pescadoras</h3>
+        <p>Del manglar y de la ciénaga sacan su sustento. Si los peces escasean o se enferman, pierden su medio de vida.</p>
+      </article>
+      <article class="persona">
+        <svg viewBox="0 0 52 52" fill="none" stroke="#0A2A40" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 46V22l12 7v-7l12 7v-7l12 7v24z"/><path d="M14 38h4M24 38h4M34 38h4"/></svg>
+        <h3>Las empresas del mar</h3>
+        <p>Las que procesan y venden pescado necesitan materia prima segura. Con agua contaminada gastan más en controles y les cuesta tener producto todo el año.</p>
+      </article>
+      <article class="persona">
+        <svg viewBox="0 0 52 52" fill="none" stroke="#0A2A40" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="26" cy="32" rx="18" ry="8"/><path d="M14 30c4-4 10-5 16-2l6-3v10l-6-3c-6 3-12 2-16-2z"/><path d="M18 14c0-3 4-3 4-6M26 14c0-3 4-3 4-6"/></svg>
+        <h3>Tu familia</h3>
+        <p>El pescado que llega a la mesa sale de estas aguas. Lo que contamina el agua puede terminar en la comida.</p>
+      </article>
+      <article class="persona">
+        <svg viewBox="0 0 52 52" fill="none" stroke="#0A2A40" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 40 16 20l8 10 8-16 16 26z"/><path d="M4 46c6-3 12-3 18 0s12 3 18 0 8-2 8-2"/></svg>
+        <h3>Santa Marta entera</h3>
+        <p>Una ciudad que pierde sus ecosistemas pierde empleos y la posibilidad de competir con sus productos en otros países.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ NUESTRA SOLUCIÓN ============ -->
+<section class="capa" id="solucion" aria-labelledby="t-solucion">
+  <div class="dentro">
+    <h2 id="t-solucion">Nuestra solución: Océano Limpio</h2>
+    <p class="entrada">Mucha gente no sabe que el agua de la ciudad está conectada con el pescado que come y con los empleos de la región. Por eso creamos un proyecto de concientización en cuatro pasos, pensado para colegios, universidades y toda la comunidad.</p>
+    <ol class="ruta">
+      <li>
+        <h3>Entender</h3>
+        <p>Esta página explica, en palabras sencillas, lo que dicen los estudios científicos y los informes de quienes vigilan el agua del Caribe colombiano.</p>
+      </li>
+      <li>
+        <h3>Actuar</h3>
+        <p>Cambios sencillos en casa y en la calle reducen lo que llega al mar. Te dejamos <a href="#tu-parte">acciones concretas</a> para empezar hoy.</p>
+      </li>
+      <li>
+        <h3>Conectar</h3>
+        <p>Unir a las comunidades pescadoras, las empresas y las autoridades, para que las decisiones sobre el agua se tomen con información y con la participación de quienes viven de ella.</p>
+      </li>
+      <li>
+        <h3>Exigir</h3>
+        <p>Proponemos medidas para empresas y autoridades, porque cuidar el agua también es cuidar la economía de la ciudad. <a href="#propuestas">Ver propuestas</a>.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ LO QUE PUEDES HACER ============ -->
+<section class="capa" id="tu-parte" aria-labelledby="t-tu-parte">
+  <div class="dentro">
+    <h2 id="t-tu-parte">Lo que puedes hacer desde hoy</h2>
+    <p class="entrada">Casi todo lo que contamina el mar empieza en tierra. Estas acciones están a tu alcance.</p>
+    <ul class="acciones-lista">
+      <li>
+        <svg viewBox="0 0 48 48" fill="none" stroke="#F6C445" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 14h24l-3 28H15z"/><path d="M8 14h32M19 14V8h10v6"/></svg>
+        <div><h3>No botes basura a la calle ni a los caños</h3><p>Con la lluvia, lo que queda en la calle baja por los canales hasta la bahía.</p></div>
+      </li>
+      <li>
+        <svg viewBox="0 0 48 48" fill="none" stroke="#F6C445" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6h12v6l4 6v24H14V18l4-6z"/><path d="M8 40 40 8"/></svg>
+        <div><h3>Usa menos plástico de un solo uso</h3><p>Lleva tu bolsa y tu botella. El plástico se rompe en pedacitos que terminan en los peces.</p></div>
+      </li>
+      <li>
+        <svg viewBox="0 0 48 48" fill="none" stroke="#F6C445" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 20h28v4a14 14 0 0 1-28 0z"/><path d="M24 38v4M16 42h16"/><path d="M8 10l32 28"/></svg>
+        <div><h3>No eches aceite ni químicos al desagüe</h3><p>Lo que se va por el lavaplatos se suma a las aguas residuales que terminan en el mar.</p></div>
+      </li>
+      <li>
+        <svg viewBox="0 0 48 48" fill="none" stroke="#F6C445" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="16" cy="14" r="5"/><circle cx="32" cy="14" r="5"/><path d="M6 40v-8a10 10 0 0 1 20 0M22 40v-8a10 10 0 0 1 20 0"/></svg>
+        <div><h3>Súmate a una limpieza de playa</h3><p>Una mañana en grupo saca del agua lo que tardaría años en desaparecer.</p></div>
+      </li>
+      <li>
+        <svg viewBox="0 0 48 48" fill="none" stroke="#F6C445" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 12h32v20H20l-8 8v-8H8z"/><path d="M24 18v6M24 28v.5"/></svg>
+        <div><h3>Reporta los vertimientos</h3><p>Si ves aguas negras o desechos llegando al mar o a un río, avisa a CORPAMAG, la autoridad ambiental del Magdalena.</p></div>
+      </li>
+      <li>
+        <svg viewBox="0 0 48 48" fill="none" stroke="#F6C445" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M24 42V20"/><path d="M24 26c-7 0-11-5-11-11 6 0 11 4 11 11z"/><path d="M24 22c7 0 11-5 11-11-6 0-11 4-11 11z"/><path d="M24 34l-8 8M24 34l8 8"/><path d="M6 44c4-2 8-2 12 0s8 2 12 0 8-2 12 0"/></svg>
+        <div><h3>Respeta los manglares y la ciénaga</h3><p>No los rellenes, no cortes el mangle ni botes escombros en sus orillas: ahí se reproducen y crecen los peces.</p></div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ LO QUE PROPONEMOS ============ -->
+<section class="capa" id="propuestas" aria-labelledby="t-propuestas">
+  <div class="dentro">
+    <h2 id="t-propuestas">Lo que proponemos para la ciudad</h2>
+    <p class="entrada">Nuestra investigación muestra que proteger el agua y los ecosistemas es también invertir en la economía de Santa Marta. Estas son las medidas que proponemos.</p>
+    <div class="propuestas">
+      <div>
+        <h3>A las autoridades</h3>
+        <ul>
+          <li>Reforzar el monitoreo de la calidad del agua en la bahía, la costa y la Ciénaga Grande.</li>
+          <li>Prevenir los vertimientos contaminantes antes de que lleguen al mar.</li>
+          <li>Apoyar la conservación y la recuperación de manglares y ecosistemas acuáticos.</li>
+          <li>Incluir a las comunidades pescadoras en las decisiones sobre el agua.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>A las empresas</h3>
+        <ul>
+          <li>Adoptar prácticas productivas responsables con el agua de la que dependen.</li>
+          <li>Fortalecer la gestión ambiental y la trazabilidad de sus productos, para cumplir lo que piden los mercados internacionales.</li>
+          <li>Compartir información sobre cómo las afecta la calidad del agua, para poder medir el problema.</li>
+          <li>Ver la conservación como parte de su competitividad, no como un gasto aparte.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="aviso"><strong>Lo que aún no sabemos.</strong> Hay mucha información sobre el agua de Santa Marta, pero casi ninguna sobre cuánto le cuesta la contaminación a las empresas locales. Por eso todavía no se puede medir cuánto ha afectado sus exportaciones, y por eso pedimos más datos e investigación.</p>
+  </div>
+</section>
+
+<!-- ============ PREGUNTAS ============ -->
+<section class="capa" id="preguntas" aria-labelledby="t-preguntas">
+  <div class="dentro">
+    <h2 id="t-preguntas">Preguntas frecuentes</h2>
+    <div class="preguntas">
+      <details>
+        <summary>¿Quién vigila la calidad del agua de Santa Marta?</summary>
+        <p>El INVEMAR (Instituto de Investigaciones Marinas y Costeras) coordina la REDCAM, una red que monitorea las aguas marinas y costeras del Caribe y del Pacífico colombianos. Además, universidades como la del Magdalena estudian la bahía, la costa y la Ciénaga Grande.</p>
+      </details>
+      <details>
+        <summary>¿Qué es un emisario submarino?</summary>
+        <p>Es un tubo que lleva las aguas residuales de la ciudad mar adentro y las descarga bajo el agua. Investigadores han estudiado cómo se diluyen esas aguas en la bahía de Santa Marta y cómo afectan al plancton.</p>
+      </details>
+      <details>
+        <summary>¿Qué tiene que ver el agua con las exportaciones?</summary>
+        <p>Para vender pescado y mariscos a otros países, las empresas deben demostrar que sus productos son seguros, de buena calidad y de origen conocido. Si el agua está contaminada, conseguir materia prima segura es más difícil y más caro, y aumenta el riesgo de que rechacen un producto.</p>
+      </details>
+      <details>
+        <summary>¿Qué es la inocuidad?</summary>
+        <p>Es la garantía de que un alimento no le hace daño a quien se lo come. En los productos del mar depende mucho de la calidad del agua de donde salen.</p>
+      </details>
+      <details>
+        <summary>¿De dónde sale la información de esta página?</summary>
+        <p>De una revisión de estudios científicos e informes técnicos sobre Santa Marta, la Ciénaga Grande y el comercio de productos del mar, que hicimos como proyecto de investigación en la Universidad del Magdalena. Las fuentes principales están al final.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ JUEGO ============ -->
+<section class="capa" id="juego" aria-labelledby="t-juego">
+  <div class="dentro">
+    <div class="antes-juego">
+      <div>
+        <svg viewBox="0 0 48 48" fill="none" stroke="#F6C445" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="14" width="36" height="22" rx="8"/><path d="M15 21v8M11 25h8"/><circle cx="31" cy="23" r="1.6" fill="#F6C445"/><circle cx="35" cy="27" r="1.6" fill="#F6C445"/></svg>
+        <h3>Aprender jugando</h3>
+        <p>Con el videojuego Océano Limpio, cada persona limpia la bahía antes de que la basura toque el fondo. Se juega en grupo, desde el celular.</p>
+      </div>
+      <div>
+        <svg viewBox="0 0 48 48" fill="none" stroke="#F6C445" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="36" cy="10" r="5"/><circle cx="12" cy="24" r="5"/><circle cx="36" cy="38" r="5"/><path d="M17 22 31 13M17 26l14 9"/></svg>
+        <h3>Comparte lo que aprendiste</h3>
+        <p>Manda esta página o reta a tus amigos en Océano Limpio. Entre más gente entienda, más gente cuida.</p>
+      </div>
+    </div>
+    <div class="juego-grid">
+    <div>
+      <h2 id="t-juego">Juega y limpia la bahía</h2>
+      <div class="prosa">
+        <p>En Océano Limpio recoges botellas, latas, bolsas, redes y neumáticos antes de que se hundan y se pierdan en el fondo. Esquiva medusas, peces y tiburones durante 2 minutos y 6 niveles cada vez más difíciles. Gana quien más limpie.</p>
+      </div>
+      <ol class="pasos">
+        <li>Quien dirige la actividad abre el juego y pulsa «Crear sala». Aparece un código QR.</li>
+        <li>Cada participante escanea el QR, escribe su nombre y elige su personaje.</li>
+        <li>Cuando todos estén dentro, la partida empieza para todos a la vez.</li>
+        <li>Al final, el podio muestra quién limpió más.</li>
+      </ol>
+      <a class="boton sol grande" href="https://cueto1824.github.io/Oceano-limpio/" target="_blank" rel="noopener">🌊 Jugar Océano Limpio</a>
+    </div>
+    <div class="pantallita" aria-hidden="true">
+      <svg viewBox="0 0 320 200">
+        <defs><linearGradient id="agua2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2bc0e4"/><stop offset="1" stop-color="#0b5a93"/></linearGradient></defs>
+        <rect width="320" height="34" fill="#9fd8f5"/><rect y="30" width="320" height="170" fill="url(#agua2)"/>
+        <path d="M0 32 Q20 28 40 32 T80 32 T120 32 T160 32 T200 32 T240 32 T280 32 T320 32" stroke="#fff" stroke-width="2" fill="none"/>
+        <path d="M0 182 Q80 172 160 180 T320 178 V200 H0Z" fill="#e3c487"/>
+        <g stroke="#4f8a3b" stroke-width="3" fill="none" stroke-linecap="round"><path d="M30 184 Q24 160 34 140 Q42 122 34 104"/><path d="M290 184 Q298 160 288 136"/><path d="M200 184 Q206 166 198 150"/></g>
+        <g transform="translate(70 60) rotate(15)"><rect x="-5" y="-11" width="10" height="22" rx="3" fill="#bfeaff"/><rect x="-5" y="-2" width="10" height="5" fill="#e63946"/><rect x="-3" y="-15" width="6" height="4" fill="#1d4ed8"/></g>
+        <g transform="translate(250 90) rotate(-10)"><rect x="-6" y="-9" width="12" height="18" rx="2" fill="#d62828"/><rect x="-6" y="-2" width="12" height="3" fill="#fff"/></g>
+        <circle cx="210" cy="140" r="11" fill="none" stroke="#1c1c1e" stroke-width="7"/>
+        <g transform="translate(150 110)"><path d="M-30 -2 L-46 -10 L-46 8 L-30 3Z" fill="#ffb703"/><ellipse cx="0" cy="0" rx="26" ry="10" fill="#1b3a5c"/><rect x="-22" y="-19" width="30" height="9" rx="4" fill="#dfe6ec"/><circle cx="26" cy="-3" r="10" fill="#0f2740"/><rect x="25" y="-9" width="11" height="8" rx="3" fill="#8ce6ff" stroke="#ffd23f" stroke-width="1.5"/></g>
+        <g transform="translate(268 150)"><ellipse rx="14" ry="9" fill="#ff7ac8" opacity=".85"/><path d="M-8 6 v12 M0 7 v14 M8 6 v12" stroke="#ff9fd8" stroke-width="2"/></g>
+        <rect x="8" y="6" width="74" height="22" rx="6" fill="rgba(0,30,60,.55)"/><text x="16" y="21" font-family="sans-serif" font-size="11" font-weight="700" fill="#fff">PUNTOS 235</text>
+        <rect x="240" y="6" width="72" height="22" rx="6" fill="rgba(0,30,60,.55)"/><text x="250" y="21" font-family="sans-serif" font-size="11" font-weight="700" fill="#fff">1:33</text>
+      </svg>
+    </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ QUIÉNES SOMOS ============ -->
+<section class="capa" id="nosotros" aria-labelledby="t-nosotros">
+  <div class="dentro">
+    <div class="nosotros-grid">
+      <div>
+        <h2 id="t-nosotros">Quiénes somos</h2>
+        <p>Somos estudiantes de la Facultad de Ciencias Empresariales y Económicas de la Universidad del Magdalena. Creamos Océano Limpio en el Seminario Taller de Investigación I, con la docente Digna Peña C., PhD.</p>
+        <ul class="equipo">
+          <li>Aylen Mendoza</li><li>Jimmy Jiménez</li><li>Nataly Gutiérrez</li><li>Valeria Hincapié</li>
+          <li>Juan Cueto</li><li>Jairo Daza Díaz</li><li>Tomás Navarro</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Fuentes principales</h3>
+        <ul class="refs">
+          <li>INVEMAR. (2020). <i>Diagnóstico y evaluación de la calidad de las aguas marinas y costeras en el Caribe y Pacífico colombianos: Informe técnico 2019</i>.</li>
+          <li>INVEMAR &amp; CORPAMAG. (2023). <i>Diagnóstico ambiental de la zona costera del departamento del Magdalena</i>.</li>
+          <li>Garcés-Ordóñez, O., et al. (2022). Microplastic pollution in water, sediments and commercial fish species from Ciénaga Grande de Santa Marta lagoon complex. <i>Science of the Total Environment, 829</i>. <a href="https://www.sciencedirect.com/science/article/pii/S0048969722017363" target="_blank" rel="noopener">Ver artículo</a></li>
+          <li>Aguirre Forero, S. E., et al. (2021). Concentración de metales pesados y calidad físico-química del agua de la Ciénaga Grande de Santa Marta. <i>Revista U.D.C.A, 24</i>(1).</li>
+          <li>García-Rentería, F.-F., et al. (2023). Wave effects on the initial dilution of untreated wastewater discharge for Santa Marta’s submarine outfall. <i>Water, 15</i>(5).</li>
+          <li>De La Hoz Roca, A. M. (2024). <i>Vertimientos de aguas residuales en zona marino costera de Santa Marta y su efecto sobre la comunidad fitoplanctónica</i>. Universidad del Magdalena.</li>
+          <li>Tette-Pomárico, A. J., et al. (2026). Functional diversity reveals hidden impacts of urban wastewater on marine-coastal zooplankton. <i>Marine Environmental Research, 217</i>. <a href="https://pubmed.ncbi.nlm.nih.gov/41831244/" target="_blank" rel="noopener">Ver artículo</a></li>
+          <li>Contreras Araque, A. (2016). Valoración económica del servicio de soporte a la pesquería del manglar en la Ciénaga Grande de Santa Marta. <i>Revista de Economía del Caribe, 18</i>.</li>
+          <li>Indrotristanto, N., et al. (2023). Estimating the rejection risk of Indonesian shrimp exports from Salmonella spp. contamination. <i>Food Control, 153</i>.</li>
+        </ul>
+      </div>
+    </div>
+    <footer class="cierre">
+      <p>Océano Limpio, Santa Marta, 2026</p>
+      <a href="#inicio">Volver a la superficie</a>
+    </footer>
+  </div>
+</section>
+</main>
+
+<script>
+  /* Cadena del impacto: un eslabón a la vez */
+  const ESLABONES = [
+    { t: 'El agua',
+      p: 'Las aguas residuales de la ciudad y otras actividades humanas cambian la calidad del agua de la bahía, la costa y la Ciénaga Grande. Los científicos la vigilan con pruebas microbiológicas, químicas y biológicas.' },
+    { t: 'Manglares y ciénaga',
+      p: 'Los manglares y la Ciénaga Grande son el lugar donde los peces se reproducen, se alimentan y crecen. Cuando el agua se contamina, estos ecosistemas se deterioran y dejan de cumplir esa función.' },
+    { t: 'Los peces',
+      p: 'Con ecosistemas dañados hay menos peces disponibles. Y lo que contamina el agua, como los microplásticos o los metales pesados, puede quedarse en los peces que después se venden para comer.' },
+    { t: 'Pescadores y empresas',
+      p: 'Las familias pescadoras ven en riesgo su sustento. Las empresas que procesan pescado tienen un abastecimiento menos seguro, gastan más en controles de calidad y les cuesta producir de forma estable.' },
+    { t: 'Lo que vendemos al mundo',
+      p: 'Para exportar, un producto del mar tiene que ser seguro, de buena calidad y de origen conocido. Si no se puede garantizar, se cierran puertas en otros mercados. Cuidar el agua es también cuidar la competitividad de Santa Marta.' }
+  ];
+  const tabs = [...document.querySelectorAll('.eslabon button')];
+  const panel = document.getElementById('panel-cadena');
+  function mostrar(i, enfocar) {
+    tabs.forEach((b, k) => { b.setAttribute('aria-selected', k === i); b.tabIndex = k === i ? 0 : -1; });
+    panel.setAttribute('aria-labelledby', 'tab-' + i);
+    panel.replaceChildren();
+    const h = document.createElement('h4'); h.textContent = ESLABONES[i].t;
+    const p = document.createElement('p'); p.textContent = ESLABONES[i].p;
+    const a = document.createElement('p'); a.className = 'ayuda';
+    a.textContent = i < ESLABONES.length - 1 ? 'Siguiente: ' + ESLABONES[i + 1].t.toLowerCase() : 'Así, lo que botamos al agua termina afectando a toda la ciudad.';
+    panel.append(h, p, a);
+    if (enfocar) tabs[i].focus();
+  }
+  tabs.forEach((b, i) => {
+    b.addEventListener('click', () => mostrar(i));
+    b.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); mostrar((i + 1) % tabs.length, true); }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); mostrar((i + tabs.length - 1) % tabs.length, true); }
+    });
+  });
+  mostrar(0);
+
+  /* Regla de profundidad: marca la sección en la que estás */
+  const enlaces = [...document.querySelectorAll('.regla a')];
+  const secciones = enlaces.map(a => document.querySelector(a.getAttribute('href')));
+  let actual = -1;
+  function marcar() {
+    const linea = innerHeight * 0.4;
+    let i = 0;
+    secciones.forEach((s, k) => { if (s && s.getBoundingClientRect().top <= linea) i = k; });
+    if (i === actual) return;
+    actual = i;
+    enlaces.forEach((a, k) => { a.classList.toggle('actual', k === i); if (k === i) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); });
+  }
+  addEventListener('scroll', marcar, { passive: true });
+  addEventListener('resize', marcar);
+  marcar();
+</script>
+</body>
+</html>
